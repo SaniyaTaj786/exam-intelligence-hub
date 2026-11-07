@@ -20,16 +20,57 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Initialize MySQL Connection Pool
-# Adjust your user, password, and host parameters as configured on your computer
-# Temporary database-free placeholder configuration
-connection_pool = None
+# ==========================================
+# 🗄️ LIVE DATABASE CONNECTION POOL SETUP
+# ==========================================
+db_config = {
+    "pool_name": "mypool",
+    "pool_size": 5,
+    "host": "localhost",
+    "user": "root",        
+    "password": "Saniya@786",
+    "database": "exam_hub",
+    "port": 3306
+}
+
+try:
+    connection_pool = pooling.MySQLConnectionPool(**db_config)
+    print("🚀 Database connection pool initialized successfully!")
+except Exception as e:
+    print(f"❌ Error creating MySQL connection pool: {e}")
+    connection_pool = None
 
 def save_to_database(filename: str, raw_text: str):
-    """Temporary placeholder - skips database logging for now"""
-    pass
+    """Saves the uploaded file metadata and parsed lines securely into your database tables."""
+    if not connection_pool:
+        print("❌ Database connection pool unavailable. Skipping save log.")
+        return
+    
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor()
+    try:
+        # Step A: Insert into question_papers tracker
+        insert_paper_query = "INSERT INTO question_papers (filename) VALUES (%s)"
+        cursor.execute(insert_paper_query, (filename,))
+        paper_id = cursor.lastrowid
 
-    connection_pool = None
+        # Step B: Break text into clean, readable lines
+        lines = [line.strip() for line in raw_text.split('\n') if len(line.strip()) > 15]
+        
+        # Step C: Batch insert individual lines into extracted_questions
+        insert_question_query = "INSERT INTO extracted_questions (paper_id, question_text) VALUES (%s, %s)"
+        data_to_insert = [(paper_id, line) for line in lines[:50]] # Limit to first 50 main statements for testing
+        
+        if data_to_insert:
+            cursor.executemany(insert_question_query, data_to_insert)
+            connection.commit()
+            print(f"✅ Successfully logged '{filename}' and its data to the database!")
+    except Exception as e:
+        connection.rollback()
+        print(f"❌ Database save error: {e}")
+    finally:
+        cursor.close()
+        connection.close()
 
 # Initialize OpenAI Client
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "your-openai-api-key"))
@@ -46,42 +87,6 @@ def extract_text_from_pdf(file: UploadFile) -> str:
         return text
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {str(e)}")
-
-def save_to_database(filename: str, raw_text: str):
-    """Saves the uploaded metadata and raw text contents into MySQL database tables."""
-    if not connection_pool:
-        return
-    
-    connection = connection_pool.get_connection()
-    cursor = connection.cursor()
-    try:
-        # Step A: Insert into question_papers tracker (Assuming basic tracking)
-        # For simplicity, setting default track_id = 1, year = 2025. You can extend this later!
-        insert_paper_query = """
-            INSERT INTO question_papers (track_id, year, file_path) 
-            VALUES (1, 2025, %s)
-        """
-        cursor.execute(insert_paper_query, (filename,))
-        paper_id = cursor.lastrowid
-
-        # Step B: Break text into paragraphs/individual lines to save into extracted_questions
-        lines = [line.strip() for line in raw_text.split('\n') if len(line.strip()) > 15]
-        
-        insert_question_query = """
-            INSERT INTO extracted_questions (paper_id, question_text) 
-            VALUES (%s, %s)
-        """
-        # Batch insert to keep it fast
-        data_to_insert = [(paper_id, line) for line in lines[:50]] # Limit to first 50 main statements for testing
-        cursor.executemany(insert_question_query, data_to_insert)
-        
-        connection.commit()
-    except Exception as e:
-        connection.rollback()
-        print(f"Database save error: {e}")
-    finally:
-        cursor.close()
-        connection.close()
 
 @app.post("/analyze-papers")
 async def analyze_papers(files: List[UploadFile] = File(...)):
@@ -102,13 +107,13 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
             
         if raw_text.strip():
             combined_text += f"\n--- Start of Paper: {file.filename} ---\n" + raw_text
-            # Save historical records into your MySQL tables
+            # Save historical records into your local database tables dynamically
             save_to_database(file.filename, raw_text)
 
     if not combined_text.strip():
         raise HTTPException(status_code=400, detail="None of the uploaded files contained readable text.")
 
-    # 3. Construct AI analysis prompt (Modified to explicitly include comprehensive ANSWERS)
+    # 3. Construct AI analysis prompt
     system_prompt = (
         "You are an expert academic evaluator. Your job is to analyze text from multiple past exam papers collectively, "
         "identify which questions or concepts repeat across different years, and extract the most important questions. "
@@ -128,7 +133,6 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
         "}"
     )
 
-    # Sending up to 12,000 characters to accommodate multiple papers within context safe margins
     user_prompt = f"Analyze these collective past exam question papers, cross-reference them for repetitions, and output the target questions along with their answers:\n\n{combined_text[:12000]}" 
 
     try:
