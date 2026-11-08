@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-// Import drawing components from the charting utility library
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function ExamHub() {
@@ -18,6 +17,7 @@ export default function ExamHub() {
     e.preventDefault();
     if (files.length === 0) {
       setError('Please select at least one question paper PDF.');
+      return;
     }
 
     setLoading(true);
@@ -48,11 +48,41 @@ export default function ExamHub() {
     }
   };
 
+  // Helper utility to render a grouped section of questions based on importance levels
+  const renderQuestionSection = (title, level, color, badgeBg, badgeText) => {
+    const filtered = results?.important_questions?.filter(q => q.priority === level) || [];
+    if (filtered.length === 0) return null;
+
+    return (
+      <div style={{ marginBottom: '35px' }}>
+        <h3 style={{ color: color, borderBottom: `2px solid ${color}`, paddingBottom: '8px', marginBottom: '20px', fontSize: '1.4rem' }}>
+          {title}
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {filtered.map((item, index) => (
+            <details key={index} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+              <summary style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#1a202c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ paddingRight: '15px', lineHeight: '1.4' }}>❓ {item.question}</span>
+                <span style={{ fontSize: '0.8rem', background: badgeBg, color: badgeText, padding: '5px 12px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
+                  {item.repetition_count}
+                </span>
+              </summary>
+              <div style={{ marginTop: '15px', padding: '15px', background: '#f8fafc', borderRadius: '6px', borderLeft: `4px solid ${color}`, cursor: 'default' }}>
+                <strong style={{ color: color, display: 'block', marginBottom: '8px', fontSize: '0.95rem' }}>💡 Bangalore University Suggested Solution Scheme:</strong>
+                <p style={{ margin: 0, whiteSpace: 'pre-line', lineHeight: '1.6', color: '#4a5568', fontSize: '0.98rem' }}>{item.answer}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={{ maxWidth: '950px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
       <header style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 style={{ fontSize: '2.5rem', color: '#1a365d', marginBottom: '10px' }}>🧠 Exam Intelligence Hub</h1>
-        <p style={{ color: '#4a5568' }}>Select and cross-analyze last-year papers to extract high-yield questions and verified answers instantly.</p>
+        <p style={{ color: '#4a5568' }}>Bangalore University Question Paper Pattern & High-Yield Analysis Dashboard.</p>
       </header>
 
       {/* Upload Box */}
@@ -98,7 +128,7 @@ export default function ExamHub() {
             <p style={{ margin: 0, lineHeight: '1.6' }}>{results.summary}</p>
           </div>
 
-          {/* NEW VISUAL ANALYTICS GRAPH SECTION */}
+          {/* Chart Section */}
           {results.chart_data && results.chart_data.length > 0 && (
             <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '12px', marginBottom: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
               <h3 style={{ margin: '0 0 5px 0', color: '#2d3748', fontSize: '1.3rem' }}>📊 Chapter Weightage Distribution</h3>
@@ -111,32 +141,21 @@ export default function ExamHub() {
                     <XAxis dataKey="topic" stroke="#4a5568" tick={{ fontSize: 12 }} />
                     <YAxis stroke="#4a5568" tick={{ fontSize: 12 }} label={{ value: 'Weight (%)', angle: -90, position: 'insideLeft', offset: 10 }} />
                     <Tooltip cursor={{ fill: '#f7fafc' }} contentStyle={{ background: '#fff', border: '1px solid #cbd5e0', borderRadius: '6px' }} />
-                    <Bar dataKey="weight" fill="#3182ce" radius={[4, 4, 0, 0]} barSize={50} name="Weight Percentage" />
+                    <Bar dataKey="weight" fill="#3182ce" radius={5} barSize={50} name="Weight Percentage" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
 
-          {/* Question List Cards */}
-          <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '20px' }}>🔑 Extracted High-Yield Questions & Solution Sets</h2>
+          {/* Upgraded 4-Section Grouped Question Lists */}
+          <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '25px' }}>🔑 Extracted High-Yield Questions & Solution Sets</h2>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {results.important_questions?.map((item, index) => (
-              <details key={index} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', cursor: 'pointer' }}>
-                <summary style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#1a202c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{item.question}</span>
-                  <span style={{ fontSize: '0.8rem', background: item.priority === 'High' ? '#fed7d7' : '#feebc8', color: item.priority === 'High' ? '#9b2c2c' : '#9c4221', padding: '4px 8px', borderRadius: '12px', marginLeft: '10px', whiteSpace: 'nowrap' }}>
-                    {item.priority} Priority • {item.repetition_count}
-                  </span>
-                </summary>
-                <div style={{ marginTop: '15px', padding: '15px', background: '#f8fafc', borderRadius: '6px', borderLeft: '4px solid #48bb78', cursor: 'default' }}>
-                  <strong style={{ color: '#2f855a', display: 'block', marginBottom: '8px' }}>💡 Suggested Master Answer Scheme:</strong>
-                  <p style={{ margin: 0, whiteSpace: 'pre-line', lineHeight: '1.6', color: '#4a5568' }}>{item.answer}</p>
-                </div>
-              </details>
-            ))}
-          </div>
+          {renderQuestionSection("🔴 1. High Importance (100% Pakka Questions)", "High", "#e53e3e", "#fed7d7", "#9b2c2c")}
+          {renderQuestionSection("🟡 2. Medium Importance Questions", "Medium", "#dd6b20", "#feebc8", "#9c4221")}
+          {renderQuestionSection("🟢 3. Low Importance Questions", "Low", "#38a169", "#c6f6d5", "#22543d")}
+          {renderQuestionSection("📌 4. Important as per Bangalore University", "BU_Important", "#4c51bf", "#e0e7ff", "#3730a3")}
+
         </div>
       )}
     </div>
