@@ -74,7 +74,7 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
         connection.commit()
 
         # Upgraded query selecting the chapter column explicitly
-                query_questions = """
+        query_questions = """
             SELECT chapter, question_text as question, importance_level as priority, 
                    frequency as repetition_count, answer_text as answer 
             FROM master_questions_bank 
