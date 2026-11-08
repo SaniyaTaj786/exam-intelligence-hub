@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
@@ -8,72 +8,62 @@ export default function ExamHub() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
-  const [selectedChapter, setSelectedChapter] = useState('ALL'); // Tracks selected filtering state
+  const [selectedChapter, setSelectedChapter] = useState('ALL');
+  const [showChapterGuide, setShowChapterGuide] = useState(false);
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
+  // Compact structural master dictionary for your Bangalore University syllabus units index
+  const chapterGuideData = {
+    "Artificial Intelligence (80 Marks Layout)": [
+      { unit: "Unit I", topic: "Rationality & PEAS", text: "[2 Marks] Define Rationality.\n[6 Marks] Detail PEAS specs for an Autonomous Car.", ans: "Rationality maximize performance metrics. PEAS maps Performance, Environment, Actuators, Sensors." },
+      { unit: "Unit II", topic: "A* Search Algo", text: "[8 Marks] Explain A* Search process and prove its admissibility.", ans: "Tracks path cost using f(n) = g(n) + h(n). Optimal using admissible heuristics." }
+    ],
+    "Database Management System (80 Marks Layout)": [
+      { unit: "Unit I", topic: "ER Models & DBA", text: "[2 Marks] State DBA duties.\n[8 Marks] Construct a comprehensive University ER Diagram.", ans: "DBA handles schema definition, privileges. ER plots entities and constraints rules." },
+      { unit: "Unit II", topic: "Normalization Core", text: "[8 Marks] State and verify 3NF and BCNF normalization properties.", ans: "3NF cuts transitive chains. BCNF requires dependencies X->Y to have X as a super key." }
+    ],
+    "Probability and Statistics (80 Marks Layout)": [
+      { unit: "Unit III", topic: "Bayes Proof Engine", text: "[8 Marks] State and prove Bayes Theorem formula maps.", ans: "Calculates conditional probability rules: P(Ei|A) = [P(Ei)*P(A|Ei)] / Sum[P(Ek)*P(A|Ek)]." }
+    ],
+    "Feature Engineering & Constitution (40 Marks Layout)": [
+      { unit: "Core Modules", topic: "Transforms & Rights", text: "[10 Marks] One-Hot vs Label Encoding trade-offs.\n[10 Marks] Analyze Article 21 scope.", ans: "One-Hot avoids rank bias. Article 21 guarantees Right to Life and Personal Liberty." }
+    ]
   };
+
+  const handleFileChange = (e) => { setFiles(Array.from(e.target.files)); };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (files.length === 0) {
-      setError('Please select at least one question paper PDF.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setResults(null);
-    setSelectedChapter('ALL'); // Reset filter upon new uploads
-
+    if (files.length === 0) { setError('Please select at least one question paper PDF.'); return; }
+    setLoading(true); setError(''); setResults(null); setSelectedChapter('ALL');
     const formData = new FormData();
-    files.forEach((file) => {
-      formData.append('files', file);
-    });
+    files.forEach(f => formData.append('files', f));
 
     try {
-      const response = await fetch('http://localhost:8000/analyze-papers', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze papers. Check your backend status.');
-      }
-
+      const response = await fetch('http://localhost:8000/analyze-papers', { method: 'POST', body: formData });
+      if (!response.ok) throw new Error('Failed to analyze papers. Check backend server.');
       const data = await response.json();
       setResults(data);
     } catch (err) {
-      setError(err.message || 'An unexpected error occurred.');
+      setError(err.message || 'An error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper utility to render a grouped section of questions based on importance levels and active chapter filter
   const renderQuestionSection = (title, level, color, badgeBg, badgeText) => {
     let filtered = results?.important_questions?.filter(q => q.priority === level) || [];
-    
-    // Apply Chapter-Wise filtering constraint if a specific tab button is active
-    if (selectedChapter !== 'ALL') {
-      filtered = filtered.filter(q => q.chapter === selectedChapter);
-    }
-    
+    if (selectedChapter !== 'ALL') filtered = filtered.filter(q => q.chapter === selectedChapter);
     if (filtered.length === 0) return null;
 
     return (
       <div style={{ marginBottom: '35px' }}>
-        <h3 style={{ color: color, borderBottom: `2px solid ${color}`, paddingBottom: '8px', marginBottom: '20px', fontSize: '1.4rem' }}>
-          {title}
-        </h3>
+        <h3 style={{ color: color, borderBottom: `2px solid ${color}`, paddingBottom: '8px', marginBottom: '20px', fontSize: '1.4rem' }}>{title}</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {filtered.map((item, index) => (
             <details key={index} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
               <summary style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#1a202c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ paddingRight: '15px', lineHeight: '1.4' }}>{item.question}</span>
-                <span style={{ fontSize: '0.8rem', background: badgeBg, color: badgeText, padding: '5px 12px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
-                  {item.repetition_count} • {item.chapter}
-                </span>
+                <span style={{ fontSize: '0.8rem', background: badgeBg, color: badgeText, padding: '5px 12px', borderRadius: '12px', whiteSpace: 'nowrap' }}>{item.repetition_count} • {item.chapter}</span>
               </summary>
               <div style={{ marginTop: '15px', padding: '15px', background: '#f8fafc', borderRadius: '6px', borderLeft: `4px solid ${color}`, cursor: 'default' }}>
                 <strong style={{ color: color, display: 'block', marginBottom: '8px', fontSize: '0.95rem' }}>💡 Bangalore University Suggested Solution Scheme:</strong>
@@ -86,10 +76,7 @@ export default function ExamHub() {
     );
   };
 
-  // Dynamically extract all unique chapter tokens present in the backend query response payload
-  const uniqueChapters = results?.important_questions 
-    ? ['ALL', ...new Set(results.important_questions.map(q => q.chapter))] 
-    : [];
+ const uniqueChapters = results?.important_questions ? ['ALL', ...new Set(results.important_questions.map(q => q.chapter))] : [];
 
   return (
     <div style={{ maxWidth: '950px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
@@ -98,103 +85,90 @@ export default function ExamHub() {
         <p style={{ color: '#4a5568' }}>Bangalore University Question Paper Pattern & High-Yield Analysis Dashboard.</p>
       </header>
 
-      {/* Upload Box */}
+      {/* Manual Reference Button */}
+      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <button
+          type="button"
+          onClick={() => setShowChapterGuide(!showChapterGuide)}
+          style={{ background: '#4c51bf', color: '#fff', padding: '14px 28px', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', width: '100%', maxWidth: '400px', boxShadow: '0 4px 6px rgba(76,81,191,0.2)' }}
+        >
+          {showChapterGuide ? '❌ Close Chapter Syllabus Index' : '📖 Important Qs From Each Chapter (BU Manual)'}
+        </button>
+      </div>
+
+      {/* Syllabus Expandable Guide */}
+      {showChapterGuide && (
+        <div style={{ background: '#f8fafc', border: '1px solid #c3dafe', padding: '25px', borderRadius: '12px', marginBottom: '30px' }}>
+          <h2 style={{ margin: '0 0 20px 0', color: '#2c5282', textAlign: 'center' }}>🎓 Bangalore University Master Syllabus Manual</h2>
+          {Object.entries(chapterGuideData).map(([subjectTitle, units], idx) => (
+            <div key={idx} style={{ marginBottom: '25px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ color: '#2b6cb0', marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>📘 {subjectTitle}</h3>
+              {units.map((u, uIdx) => (
+                <div key={uIdx} style={{ marginTop: '15px', borderLeft: '3px solid #4c51bf', paddingLeft: '15px' }}>
+                  <strong style={{ color: '#4a5568', fontSize: '0.95rem' }}>📌 {u.unit} - Topic Area: {u.topic}</strong>
+                  <p style={{ margin: '5px 0', fontWeight: 'bold', whiteSpace: 'pre-line', fontSize: '0.95rem', color: '#1a202c' }}>{u.text}</p>
+                  <p style={{ margin: '5px 0 0 0', color: '#718096', fontSize: '0.9rem', lineHeight: '1.5' }}><span style={{ color: '#4c51bf', fontWeight: 'bold' }}>Core Ans:</span> {u.ans}</p>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Upload Form Box */}
       <div style={{ background: '#f7fafc', padding: '30px', borderRadius: '12px', border: '2px dashed #cbd5e0', textAlign: 'center' }}>
         <form onSubmit={handleUpload}>
-          <input 
-            type="file" 
-            multiple 
-            accept=".pdf,.txt" 
-            onChange={handleFileChange} 
-            style={{ display: 'none' }} 
-            id="file-upload" 
-          />
-          <label htmlFor="file-upload" style={{ cursor: 'pointer', background: '#3182ce', color: '#fff', padding: '12px 24px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block', marginBottom: '15px' }}>
-            📁 Browse Question Papers
-          </label>
-          {files.length > 0 && (
-            <div style={{ marginTop: '10px', fontSize: '0.9rem', color: '#4a5568' }}>
-              <strong>Selected Files:</strong> {files.map(f => f.name).join(', ')}
-            </div>
-          )}
+          <input type="file" multiple accept=".pdf,.txt" onChange={handleFileChange} style={{ display: 'none' }} id="file-upload" />
+          <label htmlFor="file-upload" style={{ cursor: 'pointer', background: '#3182ce', color: '#fff', padding: '12px 24px', borderRadius: '6px', fontWeight: 'bold', display: 'inline-block', marginBottom: '15px' }}>📁 Browse Question Papers</label>
+          {files.length > 0 && <div style={{ marginTop: '10px', fontSize: '0.9rem', color: '#4a5568' }}><strong>Selected Files:</strong> {files.map(f => f.name).join(', ')}</div>}
           <div style={{ marginTop: '20px' }}>
-            <button 
-              type="submit" 
-              disabled={loading}
-              style={{ background: loading ? '#a0aec0' : '#48bb78', color: '#fff', padding: '12px 30px', borderRadius: '6px', fontSize: '1rem', fontWeight: 'bold', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', width: '100%', maxWidth: '250px' }}
-            >
-              {loading ? 'Analyzing Trends...' : 'Run Paper Intelligence Analysis'}
-            </button>
+            <button type="submit" disabled={loading} style={{ background: loading ? '#a0aec0' : '#48bb78', color: '#fff', padding: '12px 30px', borderRadius: '6px', fontSize: '1rem', fontWeight: 'bold', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', width: '100%', maxWidth: '250px' }}>{loading ? 'Analyzing Trends...' : 'Run Paper Intelligence Analysis'}</button>
           </div>
         </form>
       </div>
 
       {error && <p style={{ color: '#e53e3e', textAlign: 'center', marginTop: '20px', fontWeight: 'bold' }}>⚠️ {error}</p>}
 
+      {/* Results Rendering Block Container */}
       {results && (
         <div style={{ marginTop: '40px' }}>
-          
-          {/* Trend Summary Box */}
           <div style={{ background: '#ebf8ff', borderLeft: '5px solid #3182ce', padding: '20px', borderRadius: '6px', marginBottom: '30px' }}>
             <h3 style={{ margin: '0 0 10px 0', color: '#2b6cb0' }}>📈 Historical Trend Analysis Summary</h3>
             <p style={{ margin: 0, lineHeight: '1.6' }}>{results.summary}</p>
           </div>
 
-          {/* Chart Section */}
           {results.chart_data && results.chart_data.length > 0 && (
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '12px', marginBottom: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '12px', marginBottom: '40px' }}>
               <h3 style={{ margin: '0 0 5px 0', color: '#2d3748', fontSize: '1.3rem' }}>📊 Chapter Weightage Distribution</h3>
-              <p style={{ margin: '0 0 25px 0', color: '#718096', fontSize: '0.9rem' }}>Visual breakdown of how topics are emphasized relative to each other based on repeating historical marks.</p>
-              
+              <p style={{ margin: '0 0 25px 0', color: '#718096', fontSize: '0.9rem' }}>Visual breakdown based on repeating historical marks.</p>
               <div style={{ width: '100%', height: 300 }}>
                 <ResponsiveContainer>
                   <BarChart data={results.chart_data} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="topic" stroke="#4a5568" tick={{ fontSize: 12 }} />
-                    <YAxis stroke="#4a5568" tick={{ fontSize: 12 }} label={{ value: 'Weight (%)', angle: -90, position: 'insideLeft', offset: 10 }} />
-                    <Tooltip cursor={{ fill: '#f7fafc' }} contentStyle={{ background: '#fff', border: '1px solid #cbd5e0', borderRadius: '6px' }} />
-                    <Bar dataKey="weight" fill="#3182ce" radius={5} barSize={50} name="Weight Percentage" />
+                    <YAxis stroke="#4a5568" tick={{ fontSize: 12 }} />
+                    <Tooltip cursor={{ fill: '#f7fafc' }} />
+                    <Bar dataKey="weight" fill="#3182ce" radius={5} barSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
 
-          {/* NEW DYNAMIC CHAPTER-WISE SORTING BUTTONS ROW GRID */}
           <div style={{ marginBottom: '35px', background: '#f7fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
             <h4 style={{ margin: '0 0 12px 0', color: '#4a5568', fontSize: '1rem' }}>📌 Filter Study Matrix Chapter-Wise:</h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {uniqueChapters.map((ch, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedChapter(ch)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold',
-                    border: '1px solid #3182ce',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    background: selectedChapter === ch ? '#3182ce' : '#fff',
-                    color: selectedChapter === ch ? '#fff' : '#3182ce',
-                  }}
-                >
-                  {ch === 'ALL' ? '🌍 Show All Chapters' : `📖 ${ch}`}
-                </button>
+                <button key={idx} type="button" onClick={() => setSelectedChapter(ch)} style={{ padding: '8px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 'bold', border: '1px solid #3182ce', cursor: 'pointer', background: selectedChapter === ch ? '#3182ce' : '#fff', color: selectedChapter === ch ? '#fff' : '#3182ce' }}>{ch === 'ALL' ? '🌍 Show All Chapters' : `📖 ${ch}`}</button>
               ))}
             </div>
           </div>
 
-          {/* 4-Section Grouped Lists Rendering Wrapper */}
           <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '25px' }}>🔑 Extracted High-Yield Questions & Solution Sets</h2>
-          
           {renderQuestionSection("🔴 1. High Importance (100% Pakka Questions)", "High", "#e53e3e", "#fed7d7", "#9b2c2c")}
           {renderQuestionSection("🟡 2. Medium Importance Questions", "Medium", "#dd6b20", "#feebc8", "#9c4221")}
           {renderQuestionSection("🟢 3. Low Importance Questions", "Low", "#38a169", "#c6f6d5", "#22543d")}
           {renderQuestionSection("📌 4. Important as per Bangalore University", "BU_Important", "#4c51bf", "#e0e7ff", "#3730a3")}
-
         </div>
       )}
     </div>
