@@ -8,6 +8,7 @@ export default function ExamHub() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
+  const [selectedChapter, setSelectedChapter] = useState('ALL'); // Tracks selected filtering state
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
@@ -23,6 +24,7 @@ export default function ExamHub() {
     setLoading(true);
     setError('');
     setResults(null);
+    setSelectedChapter('ALL'); // Reset filter upon new uploads
 
     const formData = new FormData();
     files.forEach((file) => {
@@ -48,9 +50,15 @@ export default function ExamHub() {
     }
   };
 
-  // Helper utility to render a grouped section of questions based on importance levels
+  // Helper utility to render a grouped section of questions based on importance levels and active chapter filter
   const renderQuestionSection = (title, level, color, badgeBg, badgeText) => {
-    const filtered = results?.important_questions?.filter(q => q.priority === level) || [];
+    let filtered = results?.important_questions?.filter(q => q.priority === level) || [];
+    
+    // Apply Chapter-Wise filtering constraint if a specific tab button is active
+    if (selectedChapter !== 'ALL') {
+      filtered = filtered.filter(q => q.chapter === selectedChapter);
+    }
+    
     if (filtered.length === 0) return null;
 
     return (
@@ -62,9 +70,9 @@ export default function ExamHub() {
           {filtered.map((item, index) => (
             <details key={index} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
               <summary style={{ fontWeight: 'bold', fontSize: '1.05rem', color: '#1a202c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ paddingRight: '15px', lineHeight: '1.4' }}>❓ {item.question}</span>
+                <span style={{ paddingRight: '15px', lineHeight: '1.4' }}>{item.question}</span>
                 <span style={{ fontSize: '0.8rem', background: badgeBg, color: badgeText, padding: '5px 12px', borderRadius: '12px', whiteSpace: 'nowrap' }}>
-                  {item.repetition_count}
+                  {item.repetition_count} • {item.chapter}
                 </span>
               </summary>
               <div style={{ marginTop: '15px', padding: '15px', background: '#f8fafc', borderRadius: '6px', borderLeft: `4px solid ${color}`, cursor: 'default' }}>
@@ -77,6 +85,11 @@ export default function ExamHub() {
       </div>
     );
   };
+
+  // Dynamically extract all unique chapter tokens present in the backend query response payload
+  const uniqueChapters = results?.important_questions 
+    ? ['ALL', ...new Set(results.important_questions.map(q => q.chapter))] 
+    : [];
 
   return (
     <div style={{ maxWidth: '950px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
@@ -118,7 +131,6 @@ export default function ExamHub() {
 
       {error && <p style={{ color: '#e53e3e', textAlign: 'center', marginTop: '20px', fontWeight: 'bold' }}>⚠️ {error}</p>}
 
-      {/* Analysis Results View */}
       {results && (
         <div style={{ marginTop: '40px' }}>
           
@@ -148,7 +160,34 @@ export default function ExamHub() {
             </div>
           )}
 
-          {/* Upgraded 4-Section Grouped Question Lists */}
+          {/* NEW DYNAMIC CHAPTER-WISE SORTING BUTTONS ROW GRID */}
+          <div style={{ marginBottom: '35px', background: '#f7fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <h4 style={{ margin: '0 0 12px 0', color: '#4a5568', fontSize: '1rem' }}>📌 Filter Study Matrix Chapter-Wise:</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {uniqueChapters.map((ch, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedChapter(ch)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    border: '1px solid #3182ce',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    background: selectedChapter === ch ? '#3182ce' : '#fff',
+                    color: selectedChapter === ch ? '#fff' : '#3182ce',
+                  }}
+                >
+                  {ch === 'ALL' ? '🌍 Show All Chapters' : `📖 ${ch}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 4-Section Grouped Lists Rendering Wrapper */}
           <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '25px' }}>🔑 Extracted High-Yield Questions & Solution Sets</h2>
           
           {renderQuestionSection("🔴 1. High Importance (100% Pakka Questions)", "High", "#e53e3e", "#fed7d7", "#9b2c2c")}
