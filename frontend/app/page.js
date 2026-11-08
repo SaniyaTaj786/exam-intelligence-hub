@@ -1,6 +1,6 @@
- 'use client';
+'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function ExamHub() {
@@ -10,24 +10,28 @@ export default function ExamHub() {
   const [error, setError] = useState('');
   const [selectedChapter, setSelectedChapter] = useState('ALL');
   const [showChapterGuide, setShowChapterGuide] = useState(false);
+  const [dbManualData, setDbManualData] = useState([]); // Stores the live database questions bank
 
-  // Compact structural master dictionary for your Bangalore University syllabus units index
-  const chapterGuideData = {
-    "Artificial Intelligence (80 Marks Layout)": [
-      { unit: "Unit I", topic: "Rationality & PEAS", text: "[2 Marks] Define Rationality.\n[6 Marks] Detail PEAS specs for an Autonomous Car.", ans: "Rationality maximize performance metrics. PEAS maps Performance, Environment, Actuators, Sensors." },
-      { unit: "Unit II", topic: "A* Search Algo", text: "[8 Marks] Explain A* Search process and prove its admissibility.", ans: "Tracks path cost using f(n) = g(n) + h(n). Optimal using admissible heuristics." }
-    ],
-    "Database Management System (80 Marks Layout)": [
-      { unit: "Unit I", topic: "ER Models & DBA", text: "[2 Marks] State DBA duties.\n[8 Marks] Construct a comprehensive University ER Diagram.", ans: "DBA handles schema definition, privileges. ER plots entities and constraints rules." },
-      { unit: "Unit II", topic: "Normalization Core", text: "[8 Marks] State and verify 3NF and BCNF normalization properties.", ans: "3NF cuts transitive chains. BCNF requires dependencies X->Y to have X as a super key." }
-    ],
-    "Probability and Statistics (80 Marks Layout)": [
-      { unit: "Unit III", topic: "Bayes Proof Engine", text: "[8 Marks] State and prove Bayes Theorem formula maps.", ans: "Calculates conditional probability rules: P(Ei|A) = [P(Ei)*P(A|Ei)] / Sum[P(Ek)*P(A|Ek)]." }
-    ],
-    "Feature Engineering & Constitution (40 Marks Layout)": [
-      { unit: "Core Modules", topic: "Transforms & Rights", text: "[10 Marks] One-Hot vs Label Encoding trade-offs.\n[10 Marks] Analyze Article 21 scope.", ans: "One-Hot avoids rank bias. Article 21 guarantees Right to Life and Personal Liberty." }
-    ]
-  };
+  // Fetch the full question bank from MySQL when the manual drawer is toggled open
+  useEffect(() => {
+    if (showChapterGuide && dbManualData.length === 0) {
+      fetch('http://localhost:8000/get-db-manual')
+        .then(res => res.json())
+        .then(resData => {
+          if (resData.status === 'success') {
+            // Group the flat SQL rows by subject name cleanly
+            const grouped = resData.data.reduce((acc, item) => {
+              const sub = item.subject.replace(/_/g, ' ').toUpperCase();
+              if (!acc[sub]) acc[sub] = [];
+              acc[sub].push(item);
+              return acc;
+            }, {});
+            setDbManualData(Object.entries(grouped));
+          }
+        })
+        .catch(err => console.error("Error loading master manual: ", err));
+    }
+  }, [showChapterGuide]);
 
   const handleFileChange = (e) => { setFiles(Array.from(e.target.files)); };
 
@@ -75,8 +79,7 @@ export default function ExamHub() {
       </div>
     );
   };
-
- const uniqueChapters = results?.important_questions ? ['ALL', ...new Set(results.important_questions.map(q => q.chapter))] : [];
+  const uniqueChapters = results?.important_questions ? ['ALL', ...new Set(results.important_questions.map(q => q.chapter))] : [];
 
   return (
     <div style={{ maxWidth: '950px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
@@ -92,24 +95,29 @@ export default function ExamHub() {
           onClick={() => setShowChapterGuide(!showChapterGuide)}
           style={{ background: '#4c51bf', color: '#fff', padding: '14px 28px', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', width: '100%', maxWidth: '400px', boxShadow: '0 4px 6px rgba(76,81,191,0.2)' }}
         >
-          {showChapterGuide ? '❌ Close Chapter Syllabus Index' : '📖 Important Qs From Each Chapter (BU Manual)'}
+          {showChapterGuide ? '❌ Close Chapter Syllabus Index' : '📖 Important Qs From Each Chapter (BU Live Database Bank)'}
         </button>
       </div>
 
-      {/* Syllabus Expandable Guide */}
+      {/* Live Database Driven Expandable Manual Guide showing all 4 units dynamically */}
       {showChapterGuide && (
-        <div style={{ background: '#f8fafc', border: '1px solid #c3dafe', padding: '25px', borderRadius: '12px', marginBottom: '30px' }}>
-          <h2 style={{ margin: '0 0 20px 0', color: '#2c5282', textAlign: 'center' }}>🎓 Bangalore University Master Syllabus Manual</h2>
-          {Object.entries(chapterGuideData).map(([subjectTitle, units], idx) => (
+        <div style={{ background: '#f8fafc', border: '1px solid #c3dafe', padding: '25px', borderRadius: '12px', marginBottom: '30px', maxHeight: '600px', overflowY: 'auto' }}>
+          <h2 style={{ margin: '0 0 20px 0', color: '#2c5282', textAlign: 'center' }}>🎓 Bangalore University Live Database Manual ({dbManualData.length} Subjects Loaded)</h2>
+          {dbManualData.map(([subjectTitle, questions], idx) => (
             <div key={idx} style={{ marginBottom: '25px', background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
               <h3 style={{ color: '#2b6cb0', marginTop: 0, borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>📘 {subjectTitle}</h3>
-              {units.map((u, uIdx) => (
-                <div key={uIdx} style={{ marginTop: '15px', borderLeft: '3px solid #4c51bf', paddingLeft: '15px' }}>
-                  <strong style={{ color: '#4a5568', fontSize: '0.95rem' }}>📌 {u.unit} - Topic Area: {u.topic}</strong>
-                  <p style={{ margin: '5px 0', fontWeight: 'bold', whiteSpace: 'pre-line', fontSize: '0.95rem', color: '#1a202c' }}>{u.text}</p>
-                  <p style={{ margin: '5px 0 0 0', color: '#718096', fontSize: '0.9rem', lineHeight: '1.5' }}><span style={{ color: '#4c51bf', fontWeight: 'bold' }}>Core Ans:</span> {u.ans}</p>
-                </div>
-              ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>
+                {questions.map((q, qIdx) => (
+                  <div key={qIdx} style={{ borderLeft: '4px solid #4c51bf', paddingLeft: '15px', background: '#f8fafc', padding: '12px', borderRadius: '0 6px 6px 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <strong style={{ color: '#2d3748', fontSize: '0.95rem' }}>📌 {q.chapter} ({q.repetition_count})</strong>
+                      <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold' }}>{q.priority} Priority</span>
+                    </div>
+                    <p style={{ margin: '5px 0', fontWeight: 'bold', whiteSpace: 'pre-line', fontSize: '0.95rem', color: '#1a202c' }}>{q.question}</p>
+                    <p style={{ margin: '5px 0 0 0', color: '#4a5568', fontSize: '0.9rem', lineHeight: '1.5' }}><span style={{ color: '#4c51bf', fontWeight: 'bold' }}>Suggested Answer:</span> {q.answer}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

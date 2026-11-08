@@ -101,6 +101,25 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
         cursor.close()
         connection.close()
 
+@app.get("/get-db-manual")
+async def get_db_manual():
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT subject, chapter, question_text as question, importance_level as priority, 
+                   frequency as repetition_count, answer_text as answer 
+            FROM master_questions_bank
+            ORDER BY subject, chapter, priority DESC
+        """)
+        records = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return {"status": "success", "data": records}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
