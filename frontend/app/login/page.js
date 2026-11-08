@@ -21,7 +21,7 @@ export default function AuthPage() {
     const payload = isLogin ? { username, password } : { username, email, password };
 
     try {
-      const response = await fetch('http://localhost:8000'${endpoint}`, {
+      const response = await fetch(`http://localhost:8000${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -121,7 +121,7 @@ export default function AuthPage() {
         {error && <p style={{ color: '#e53e3e', fontSize: '0.9rem', textAlign: 'center', marginTop: '15px', fontWeight: 'bold' }}>⚠️ {error}</p>}
         {message && <p style={{ color: '#38a169', fontSize: '0.9rem', textAlign: 'center', marginTop: '15px', fontWeight: 'bold' }}>{message}</p>}
 
-        <div style={{ textAlign: 'center', marginTop: '25px', borderTop: '1px solid #edf2f7', paddingTop: '20px' }}>
+                <div style={{ textAlign: 'center', marginTop: '25px', borderTop: '1px solid #edf2f7', paddingTop: '20px' }}>
           <button 
             type="button" 
             onClick={() => { setIsLogin(!isLogin); setError(''); setMessage(''); }}
@@ -130,6 +130,7 @@ export default function AuthPage() {
             {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
           </button>
         </div>
+
 
       </div>
     </div>
