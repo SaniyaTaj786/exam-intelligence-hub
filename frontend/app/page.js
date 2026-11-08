@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+// Import drawing components from the charting utility library
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function ExamHub() {
   const [files, setFiles] = useState([]);
@@ -48,7 +50,7 @@ export default function ExamHub() {
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
+    <div style={{ maxWidth: '950px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
       <header style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 style={{ fontSize: '2.5rem', color: '#1a365d', marginBottom: '10px' }}>🧠 Exam Intelligence Hub</h1>
         <p style={{ color: '#4a5568' }}>Select and cross-analyze last-year papers to extract high-yield questions and verified answers instantly.</p>
@@ -90,11 +92,34 @@ export default function ExamHub() {
       {/* Analysis Results View */}
       {results && (
         <div style={{ marginTop: '40px' }}>
+          
+          {/* Trend Summary Box */}
           <div style={{ background: '#ebf8ff', borderLeft: '5px solid #3182ce', padding: '20px', borderRadius: '6px', marginBottom: '30px' }}>
             <h3 style={{ margin: '0 0 10px 0', color: '#2b6cb0' }}>📈 Historical Trend Analysis Summary</h3>
             <p style={{ margin: 0, lineHeight: '1.6' }}>{results.summary}</p>
           </div>
 
+          {/* NEW VISUAL ANALYTICS GRAPH SECTION */}
+          {results.chart_data && results.chart_data.length > 0 && (
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '12px', marginBottom: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+              <h3 style={{ margin: '0 0 5px 0', color: '#2d3748', fontSize: '1.3rem' }}>📊 Chapter Weightage Distribution</h3>
+              <p style={{ margin: '0 0 25px 0', color: '#718096', fontSize: '0.9rem' }}>Visual breakdown of how topics are emphasized relative to each other based on repeating historical marks.</p>
+              
+              <div style={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer>
+                  <BarChart data={results.chart_data} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="topic" stroke="#4a5568" tick={{ fontSize: 12 }} />
+                    <YAxis stroke="#4a5568" tick={{ fontSize: 12 }} label={{ value: 'Weight (%)', angle: -90, position: 'insideLeft', offset: 10 }} />
+                    <Tooltip cursor={{ fill: '#f7fafc' }} contentStyle={{ background: '#fff', border: '1px solid #cbd5e0', borderRadius: '6px' }} />
+                    <Bar dataKey="weight" fill="#3182ce" radius={[4, 4, 0, 0]} barSize={50} name="Weight Percentage" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Question List Cards */}
           <h2 style={{ fontSize: '1.8rem', color: '#2d3748', marginBottom: '20px' }}>🔑 Extracted High-Yield Questions & Solution Sets</h2>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -102,7 +127,7 @@ export default function ExamHub() {
               <details key={index} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', cursor: 'pointer' }}>
                 <summary style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#1a202c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{item.question}</span>
-                  <span style={{ fontSize: '0.8rem', background: item.priority === 'High' ? '#fed7d7' : '#feebc8', color: item.priority === 'High' ? '#9b2c2c' : '#9c4221', padding: '4px 8px', borderRadius: '12px', marginLeft: '10px' }}>
+                  <span style={{ fontSize: '0.8rem', background: item.priority === 'High' ? '#fed7d7' : '#feebc8', color: item.priority === 'High' ? '#9b2c2c' : '#9c4221', padding: '4px 8px', borderRadius: '12px', marginLeft: '10px', whiteSpace: 'nowrap' }}>
                     {item.priority} Priority • {item.repetition_count}
                   </span>
                 </summary>

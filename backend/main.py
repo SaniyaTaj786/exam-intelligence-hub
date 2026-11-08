@@ -113,14 +113,20 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
     if not combined_text.strip():
         raise HTTPException(status_code=400, detail="None of the uploaded files contained readable text.")
 
-    # 3. Construct AI analysis prompt
+        # 3. Construct AI analysis prompt (Updated to include explicit chart plotting numbers)
     system_prompt = (
         "You are an expert academic evaluator. Your job is to analyze text from multiple past exam papers collectively, "
         "identify which questions or concepts repeat across different years, and extract the most important questions. "
-        "Crucially, you must also provide standard, accurate, high-scoring academic answers for each identified question.\n\n"
+        "Crucially, you must also provide standard, accurate, high-scoring academic answers for each identified question, "
+        "and calculate numerical distribution data for rendering visual analytics charts.\n\n"
         "You must respond ONLY with a valid JSON object matching this structure exactly:\n"
         "{\n"
         "  \"summary\": \"Brief overview of recurring trends and topic distributions found across these papers.\",\n"
+        "  \"chart_data\": [\n"
+        "    { \"topic\": \"Chapter/Topic A Name\", \"weight\": 45 },\n"
+        "    { \"topic\": \"Chapter/Topic B Name\", \"weight\": 30 },\n"
+        "    { \"topic\": \"Chapter/Topic C Name\", \"weight\": 25 }\n"
+        "  ],\n"
         "  \"important_questions\": [\n"
         "    {\n"
         "      \"topic\": \"Topic/Chapter Name\",\n"
@@ -132,6 +138,7 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
         "  ]\n"
         "}"
     )
+
 
     user_prompt = f"Analyze these collective past exam question papers, cross-reference them for repetitions, and output the target questions along with their answers:\n\n{combined_text[:12000]}" 
 
