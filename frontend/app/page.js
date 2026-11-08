@@ -18,7 +18,6 @@ export default function ExamHub() {
     e.preventDefault();
     if (files.length === 0) {
       setError('Please select at least one question paper PDF.');
-      return;
     }
 
     setLoading(true);
@@ -31,7 +30,7 @@ export default function ExamHub() {
     });
 
     try {
-      const response = await fetch('http://127.0.0', {
+      const response = await fetch('http://localhost:8000/analyze-papers', {
         method: 'POST',
         body: formData,
       });
