@@ -28,7 +28,7 @@ db_config = {
     "pool_size": 5,
     "host": "localhost",
     "user": "root",        
-    "password": "Saniya@786",
+    "password": "",
     "database": "exam_hub",
     "port": 3306
 }
