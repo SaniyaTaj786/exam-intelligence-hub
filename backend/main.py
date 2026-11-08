@@ -160,6 +160,76 @@ async def analyze_papers(files: List[UploadFile] = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI System Processing failed: {str(e)}")
 
+# =========================================================================
+# 🛡️ USER AUTHENTICATION ENDPOINTS
+# =========================================================================
+
+class SignUpRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/signup")
+async def signup(user_data: SignUpRequest):
+    """Registers a new user account safely into the MySQL database table."""
+    if not connection_pool:
+        raise HTTPException(status_code=500, detail="Database connection pool unavailable.")
+        
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor()
+    try:
+        # Check if username or email already exists to prevent duplicate entries
+        check_query = "SELECT id FROM system_users WHERE username = %s OR email = %s"
+        cursor.execute(check_query, (user_data.username, user_data.email))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Username or Email already registered.")
+
+        # For strict production apps, passwords should be encrypted/hashed. 
+        # Storing directly for this development iteration loop to keep setups straightforward.
+        insert_user_query = """
+            INSERT INTO system_users (username, email, password_hash) 
+            VALUES (%s, %s, %s)
+        """
+        cursor.execute(insert_user_query, (user_data.username, user_data.email, user_data.password))
+        connection.commit()
+        return {"message": "User account registered successfully! You can now log in."}
+        
+    except mysql.connector.Error as err:
+        connection.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(err)}")
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.post("/login")
+async def login(credentials: LoginRequest):
+    """Validates user account logging details against saved database data records."""
+    if not connection_pool:
+        raise HTTPException(status_code=500, detail="Database connection pool unavailable.")
+        
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor(dictionary=True) # Returns records as a dictionary
+    try:
+        login_query = "SELECT id, username, email FROM system_users WHERE username = %s AND password_hash = %s"
+        cursor.execute(login_query, (credentials.username, credentials.password))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=400, detail="Invalid username or password credentials.")
+            
+        return {"message": "Login successful!", "user": user}
+        
+    except mysql.connector.Error as err:
+        raise HTTPException(status_code=500, detail=f"Database operational error: {str(err)}")
+    finally:
+        cursor.close()
+        connection.close()
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
