@@ -11,9 +11,8 @@ export default function ExamHub() {
   const [selectedChapter, setSelectedChapter] = useState('ALL');
   const [showChapterGuide, setShowChapterGuide] = useState(false);
   const [dbManualData, setDbManualData] = useState([]); 
-  const [activeSubjectTab, setActiveSubjectTab] = useState(''); // Tracks which subject tab is selected inside the manual guide
+  const [activeSubjectTab, setActiveSubjectTab] = useState('');
 
-  // Fetch full question bank from MySQL when manual guide is toggled open
   useEffect(() => {
     if (showChapterGuide && dbManualData.length === 0) {
       fetch('http://localhost:8000/get-db-manual')
@@ -29,7 +28,7 @@ export default function ExamHub() {
             const entries = Object.entries(grouped);
             setDbManualData(entries);
             if (entries.length > 0) {
-              setActiveSubjectTab(entries[0][0]); // Automatically select the first subject as default active tab
+              setActiveSubjectTab(entries[0][0]);
             }
           }
         })
@@ -87,29 +86,35 @@ export default function ExamHub() {
 
   return (
     <div style={{ maxWidth: '950px', margin: '40px auto', padding: '0 20px', fontFamily: 'sans-serif', color: '#333' }}>
-      <header style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#1a365d', marginBottom: '10px' }}>🧠 Exam Intelligence Hub</h1>
-        <p style={{ color: '#4a5568' }}>Bangalore University Question Paper Pattern & High-Yield Analysis Dashboard.</p>
+      
+      {/* Brand New Customized Institutional Header Panel */}
+      <header style={{ textAlign: 'center', marginBottom: '40px', background: '#f8fafc', padding: '30px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+        <h1 style={{ fontSize: '2.6rem', color: '#1a365d', margin: '0 0 5px 0', fontWeight: '800' }}>🧠 Exam Intelligence Hub</h1>
+        <div style={{ fontSize: '1.1rem', color: '#4c51bf', fontWeight: 'bold', margin: '5px 0 12px 0', letterSpacing: '0.5px' }}>
+          🎓 Developed by: <span style={{ textDecoration: 'underline', color: '#2b6cb0' }}>Saniya Taj</span>
+        </div>
+        <p style={{ color: '#4a5568', margin: 0, fontSize: '0.98rem', lineHeight: '1.5' }}>
+          Bangalore University Question Paper Pattern & High-Yield Analysis Dashboard Systems.
+        </p>
       </header>
 
-      {/* Main Manual Reference Master Trigger Button */}
+      {/* Manual Reference Button */}
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <button
           type="button"
           onClick={() => setShowChapterGuide(!showChapterGuide)}
-          style={{ background: '#4c51bf', color: '#fff', padding: '14px 28px', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', width: '100%', maxWidth: '450px', boxShadow: '0 4px 6px rgba(76,81,191,0.2)', transition: 'transform 0.1s' }}
+          style={{ background: '#4c51bf', color: '#fff', padding: '14px 28px', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 'bold', border: 'none', cursor: 'pointer', width: '100%', maxWidth: '450px', boxShadow: '0 4px 6px rgba(76,81,191,0.2)' }}
         >
           {showChapterGuide ? '❌ Close Syllabus Manual' : '📖 View Important Qs From Each Chapter'}
         </button>
       </div>
 
-      {/* Upgraded Database Manual Section with Dynamic Subject Selector Buttons */}
+      {/* Expandable Manual Guide Section */}
       {showChapterGuide && (
         <div style={{ background: '#f8fafc', border: '1px solid #c3dafe', padding: '25px', borderRadius: '12px', marginBottom: '30px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
           <h2 style={{ margin: '0 0 15px 0', color: '#2c5282', textAlign: 'center' }}>🎓 Bangalore University Master Syllabus Manual</h2>
           <p style={{ textAlign: 'center', color: '#718096', margin: '0 0 20px 0', fontSize: '0.95rem' }}>Select a subject below to instantly view its chapter-wise high-yield questions:</p>
           
-          {/* Row of Dynamic Subject Selection Buttons */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '25px', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
             {dbManualData.map(([subjectTitle], idx) => (
               <button
@@ -125,8 +130,7 @@ export default function ExamHub() {
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   background: activeSubjectTab === subjectTitle ? '#4c51bf' : '#fff',
-                  color: activeSubjectTab === subjectTitle ? '#fff' : '#4c51bf',
-                  boxShadow: activeSubjectTab === subjectTitle ? '0 2px 4px rgba(76,81,191,0.3)' : 'none'
+                  color: activeSubjectTab === subjectTitle ? '#fff' : '#4c51bf'
                 }}
               >
                 📘 {subjectTitle}
@@ -134,26 +138,23 @@ export default function ExamHub() {
             ))}
           </div>
 
-          {/* Render Only the Selected Subject Content */}
-          <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+          <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
             {dbManualData.map(([subjectTitle, questions], idx) => {
               if (subjectTitle !== activeSubjectTab) return null;
               return (
                 <div key={idx} style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <h3 style={{ color: '#2b6cb0', marginTop: 0, borderBottom: '2px solid #cbd5e0', paddingBottom: '8px', marginBottom: '15px' }}>
-                    ✍️ {subjectTitle} — Syllabus Matrix Questions
+                    ✍️ {subjectTitle} — Syllabus Matrix
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     {questions.map((q, qIdx) => (
                       <div key={qIdx} style={{ borderLeft: '4px solid #4c51bf', paddingLeft: '15px', background: '#f8fafc', padding: '15px', borderRadius: '0 6px 6px 0', border: '1px solid #edf2f7', borderLeftWidth: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '5px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <strong style={{ color: '#2d3748', fontSize: '0.95rem' }}>📌 {q.chapter} ({q.repetition_count})</strong>
-                          <span style={{ fontSize: '0.75rem', background: q.priority === 'High' ? '#fed7d7' : '#e0e7ff', color: q.priority === 'High' ? '#9b2c2c' : '#3730a3', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
-                            {q.priority} Priority
-                          </span>
+                          <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold' }}>{q.priority} Priority</span>
                         </div>
-                        <p style={{ margin: '5px 0', fontWeight: 'bold', whiteSpace: 'pre-line', fontSize: '0.95rem', color: '#1a202c', lineHeight: '1.4' }}>{q.question}</p>
-                        <p style={{ margin: '8px 0 0 0', color: '#4a5568', fontSize: '0.9rem', lineHeight: '1.5', background: '#fff', padding: '10px', borderRadius: '4px', border: '1px dashed #e2e8f0' }}>
+                        <p style={{ margin: '5px 0', fontWeight: 'bold', whiteSpace: 'pre-line', fontSize: '0.95rem', color: '#1a202c' }}>{q.question}</p>
+                        <p style={{ margin: '8px 0 0 0', color: '#4a5568', fontSize: '0.9rem', lineHeight: '1.5', background: '#fff', padding: '10px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                           <span style={{ color: '#4c51bf', fontWeight: 'bold' }}>BU Answer Blueprint:</span> {q.answer}
                         </p>
                       </div>
