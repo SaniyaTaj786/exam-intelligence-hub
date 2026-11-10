@@ -1,11 +1,6 @@
 @import "tailwindcss";
 
-@utility dark-mode-override {
-  background-color: #0f172a;
-  color: #f8fafc;
-}
-
-/* Clear CSS Variables mapped manually for perfect fallback control */
+/* Manual Toggle theme classes matching your layout button state */
 .dark body {
   background-color: #0f172a !important;
   color: #f8fafc !important;
@@ -25,7 +20,9 @@
   border-color: #334155 !important;
 }
 
-.dark .text-slate-700, .dark .text-slate-600, .dark .text-slate-500 {
+.dark .text-slate-700, 
+.dark .text-slate-600, 
+.dark .text-slate-500 {
   color: #cbd5e1 !important;
 }
 
