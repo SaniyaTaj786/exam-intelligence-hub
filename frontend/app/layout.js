@@ -7,8 +7,7 @@ export default function RootLayout({ children }) {
   const [darkMode, setDarkMode] = useState(false);
 
   return (
-    <html lang="en" data-theme={darkMode ? 'dark' : 'light'} className={darkMode ? 'dark' : ''}>
-
+    <html lang="en" className={darkMode ? 'dark' : ''}>
       <body className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 antialiased flex flex-col transition-colors duration-300">
         {/* Premium Global Navigation Bar Header */}
         <header className="w-full bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700 sticky top-0 z-50 shadow-xs transition-colors duration-300">
