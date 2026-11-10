@@ -296,14 +296,14 @@ questions: {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
-      {/* Premium Navigation Header Controllers */}
-      <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex space-x-2">
+            {/* Premium Navigation Header Controllers */}
+      <div className="bg-white dark:bg-slate-800 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex space-x-2 transition-colors duration-300">
         <button
           onClick={() => setActiveTab('analyzer')}
           className={`flex-1 flex items-center justify-center space-x-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${
             activeTab === 'analyzer'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <span>📄 Question Paper Analyzer</span>
@@ -313,22 +313,23 @@ questions: {
           className={`flex-1 flex items-center justify-center space-x-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all duration-200 ${
             activeTab === 'all-subjects'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <span>🎯 Subject Wise Important Questions</span>
         </button>
       </div>
+
       {/* View Mode 1: PDF Automated Analyzer Layout */}
       {activeTab === 'analyzer' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6 h-fit">
+                    <div className="lg:col-span-1 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6 h-fit transition-colors duration-300">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Upload Prior Year Paper</h2>
-              <p className="text-xs text-slate-500 mt-1">Select a PDF format exam paper file. The system will instantly process keywords and map out your syllabus priorities.</p>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Upload Prior Year Paper</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Select a PDF format exam paper file. The system will instantly process keywords and map out your syllabus priorities.</p>
             </div>
 
-            <div className="border-2 border-dashed border-slate-200 hover:border-blue-500 rounded-xl p-8 text-center transition-all bg-slate-50/50 group relative">
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-8 text-center transition-all bg-slate-50/50 dark:bg-slate-900/30 group relative">
               <input
                 type="file"
                 accept=".pdf"
@@ -338,10 +339,11 @@ questions: {
               />
               <div className="space-y-3 pointer-events-none">
                 <div className="text-4xl group-hover:scale-110 transition-transform duration-200">📥</div>
-                <div className="text-xs font-bold text-slate-700">Click to upload file or drag & drop</div>
-                <div className="text-[10px] text-slate-400">Accepts University PDF papers</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Click to upload file or drag & drop</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500">Accepts University PDF papers</div>
               </div>
             </div>
+  
 
             {uploading && (
               <div className="flex items-center justify-center space-x-3 bg-blue-50 p-4 rounded-xl border border-blue-100">
@@ -359,7 +361,8 @@ questions: {
             </div>
           </div>
 
-          <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden animate-fadeIn transition-colors duration-300">
+
             {analysisResult ? (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-fadeIn">
                 <div className="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 text-white">
@@ -413,7 +416,8 @@ questions: {
       {activeTab === 'all-subjects' && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Left Sidebar Subject Grid Selectors */}
-          <div className="lg:col-span-1 flex flex-col space-y-2">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden animate-fadeIn transition-colors duration-300">
+
             {Object.entries(BU_EXAM_REPOSITORY).map(([key, item]) => (
               <button
                 key={key}
